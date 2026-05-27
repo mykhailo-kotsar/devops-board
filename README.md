@@ -32,7 +32,7 @@ A lightweight, offline-first Kanban task manager — single HTML file, zero depe
 **Run locally — no server needed:**
 
 ```bash
-git clone https://github.com/your-username/devops-board.git
+git clone https://github.com/mykhailo-kotsar/devops-board.git
 cd devops-board
 
 open index.html        # macOS
