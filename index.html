@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DevOps Task Board</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Unbounded:wght@400;700;900&display=swap');
+
+  :root {
+    --bg: #0a0c10;
+    --surface: #111318;
+    --surface2: #1a1d24;
+    --surface3: #22262f;
+    --border: #2a2e3a;
+    --accent: #00d4ff;
+    --accent2: #7c3aed;
+    --accent3: #f59e0b;
+    --danger: #ef4444;
+    --success: #10b981;
+    --text: #e2e8f0;
+    --text2: #8892a4;
+    --text3: #4a5568;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* HEADER */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 60px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .logo {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 1.1em;
+    font-weight: 900;
+    color: var(--accent);
+    letter-spacing: -0.02em;
+  }
+  .logo span { color: var(--text2); font-weight: 400; }
+
+  .header-right { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+  .lang-switcher { display: flex; gap: 4px; }
+  .lang-btn {
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text2);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75em;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .lang-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(0,212,255,0.08); }
+  .lang-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8em;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(0,212,255,0.05); }
+  .btn-accent { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 700; }
+  .btn-accent:hover { background: #00b8db; color: #000; }
+  .btn-danger { background: var(--danger); color: #fff; border-color: var(--danger); }
+  .btn-danger:hover { background: #dc2626; }
+  .btn-success { background: var(--success); color: #000; border-color: var(--success); }
+  .btn-sm { padding: 4px 10px; font-size: 0.75em; }
+
+  /* STATS BAR */
+  .stats-bar {
+    padding: 8px 24px;
+    display: flex;
+    gap: 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    font-size: 0.75em;
+    color: var(--text2);
+    flex-wrap: wrap;
+  }
+  .stat-item { display: flex; align-items: center; gap: 6px; }
+  .stat-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+  .tg-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75em;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+  }
+  .tg-status.connected { border-color: var(--success); color: var(--success); }
+  .tg-status.disconnected { border-color: var(--border); color: var(--text3); }
+
+  /* INBOX */
+  .inbox-section {
+    margin: 16px 24px 0;
+    background: rgba(245,158,11,0.06);
+    border: 1px solid rgba(245,158,11,0.25);
+    border-radius: 10px;
+    padding: 14px 18px;
+  }
+  .inbox-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .inbox-title {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 0.8em;
+    color: var(--accent3);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .inbox-badge {
+    background: var(--accent3);
+    color: #000;
+    font-size: 0.7em;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 20px;
+  }
+  .inbox-tasks { display: flex; flex-wrap: wrap; gap: 8px; min-height: 20px; }
+  .inbox-task {
+    background: var(--surface2);
+    border: 1px solid rgba(245,158,11,0.25);
+    border-radius: 6px;
+    padding: 7px 12px;
+    font-size: 0.78em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .inbox-task:hover { border-color: var(--accent3); }
+  .inbox-task.done { opacity: 0.4; }
+  .inbox-task.done .inbox-task-text { text-decoration: line-through; }
+  .inbox-dot { width: 7px; height: 7px; background: var(--accent3); border-radius: 50%; flex-shrink: 0; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  .inbox-action {
+    background: none; border: none; color: var(--text3);
+    cursor: pointer; font-size: 0.85em; padding: 1px 3px;
+    transition: color 0.15s;
+  }
+  .inbox-action:hover { color: var(--danger); }
+
+  /* BOARD */
+  .board-wrapper { padding: 16px 24px; overflow-x: auto; }
+  .board { display: flex; gap: 14px; min-width: max-content; align-items: flex-start; }
+
+  /* COLUMN */
+  .column {
+    width: 295px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 230px);
+    flex-shrink: 0;
+  }
+  .column-header {
+    padding: 13px 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .column-title-wrap { display: flex; align-items: center; gap: 9px; }
+  .column-color { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .column-title { font-family: 'Unbounded', sans-serif; font-size: 0.78em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+  .column-count { background: var(--surface3); color: var(--text2); font-size: 0.7em; padding: 2px 7px; border-radius: 20px; }
+  .column-actions { display: flex; gap: 4px; }
+  .col-btn { background: none; border: none; color: var(--text3); cursor: pointer; font-size: 0.95em; padding: 2px 5px; border-radius: 4px; transition: all 0.15s; }
+  .col-btn:hover { color: var(--accent); background: rgba(0,212,255,0.1); }
+  .col-btn.del:hover { color: var(--danger); background: rgba(239,68,68,0.1); }
+
+  .column-tasks {
+    padding: 10px;
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+  .column-tasks::-webkit-scrollbar { width: 3px; }
+  .column-tasks::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .column-footer { padding: 9px 10px; border-top: 1px solid var(--border); flex-shrink: 0; }
+  .col-add-btn {
+    width: 100%;
+    background: none;
+    border: 1px dashed var(--border);
+    color: var(--text3);
+    padding: 7px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78em;
+    transition: all 0.15s;
+  }
+  .col-add-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(0,212,255,0.04); }
+
+  .add-col-btn {
+    width: 56px; height: 56px;
+    background: var(--surface);
+    border: 1px dashed var(--border);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text3);
+    font-size: 1.4em;
+    flex-shrink: 0;
+    transition: all 0.15s;
+    align-self: flex-start;
+  }
+  .add-col-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* TASK CARD */
+  .task-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 11px 11px 11px 14px;
+    cursor: grab;
+    transition: all 0.15s;
+    position: relative;
+    user-select: none;
+  }
+  .task-card:hover { border-color: var(--accent); box-shadow: 0 4px 16px rgba(0,212,255,0.08); transform: translateY(-1px); }
+  .task-card.dragging { opacity: 0.4; cursor: grabbing; }
+  .task-card.done-card { opacity: 0.5; }
+  .task-card.done-card .task-title { text-decoration: line-through; color: var(--text3); }
+
+  .task-priority { width: 3px; position: absolute; left: 0; top: 8px; bottom: 8px; border-radius: 0 2px 2px 0; }
+  .p-high { background: var(--danger); }
+  .p-medium { background: var(--accent3); }
+  .p-low { background: var(--success); }
+
+  .task-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 6px; margin-bottom: 6px; }
+  .task-title { font-size: 0.8em; line-height: 1.4; color: var(--text); font-weight: 500; flex: 1; }
+  .task-actions { display: flex; gap: 3px; flex-shrink: 0; }
+  .task-btn { background: none; border: none; color: var(--text3); cursor: pointer; font-size: 0.82em; padding: 2px 4px; border-radius: 3px; transition: all 0.15s; }
+  .task-btn:hover { color: var(--accent); background: rgba(0,212,255,0.1); }
+  .task-btn.del:hover { color: var(--danger); background: rgba(239,68,68,0.1); }
+  .task-btn.done-b:hover { color: var(--success); }
+
+  .task-desc { font-size: 0.73em; color: var(--text2); margin-top: 4px; line-height: 1.4; }
+
+  .task-meta { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
+  .task-badge { font-size: 0.68em; padding: 2px 7px; border-radius: 4px; display: flex; align-items: center; gap: 3px; }
+  .b-deadline { background: rgba(239,68,68,0.12); color: #f87171; border: 1px solid rgba(239,68,68,0.25); }
+  .b-deadline.soon { background: rgba(239,68,68,0.25); animation: blink 1s infinite; }
+  .b-timer { background: rgba(0,212,255,0.08); color: var(--accent); border: 1px solid rgba(0,212,255,0.2); }
+  .b-timer.running { animation: blink 1s infinite; }
+  .b-remind { background: rgba(245,158,11,0.08); color: var(--accent3); border: 1px solid rgba(245,158,11,0.2); }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+  /* SUBTASKS */
+  .subtasks { margin-top: 8px; }
+  .subtask {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 4px 6px;
+    border-radius: 4px;
+    font-size: 0.72em;
+    color: var(--text2);
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+  .subtask:hover { background: var(--surface3); }
+  .subtask.done-sub { color: var(--text3); text-decoration: line-through; }
+  .sub-check { width: 13px; height: 13px; border: 1px solid var(--border); border-radius: 3px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 0.8em; }
+  .subtask.done-sub .sub-check { background: var(--success); border-color: var(--success); color: #000; }
+  .sub-del { background: none; border: none; color: transparent; cursor: pointer; font-size: 0.85em; margin-left: auto; transition: color 0.15s; }
+  .subtask:hover .sub-del { color: var(--text3); }
+  .sub-del:hover { color: var(--danger) !important; }
+
+  .subtask-progress { height: 2px; background: var(--surface3); border-radius: 1px; margin-top: 4px; }
+  .subtask-progress-fill { height: 100%; background: var(--success); border-radius: 1px; transition: width 0.3s; }
+
+  /* DRAG OVER */
+  .drag-target { border: 2px dashed var(--accent) !important; background: rgba(0,212,255,0.04) !important; }
+
+  /* EMPTY */
+  .empty-col { text-align: center; padding: 28px 10px; color: var(--text3); font-size: 0.76em; }
+  .empty-col .ei { font-size: 1.8em; margin-bottom: 7px; }
+
+  /* ARCHIVE */
+  .archive-section { margin: 0 24px 20px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .archive-header { padding: 11px 16px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: background 0.15s; }
+  .archive-header:hover { background: var(--surface2); }
+  .archive-title { font-family: 'Unbounded', sans-serif; font-size: 0.75em; color: var(--text3); display: flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .archive-body { display: none; padding: 10px; border-top: 1px solid var(--border); }
+  .archive-body.open { display: block; }
+  .archive-task { display: flex; align-items: center; justify-content: space-between; padding: 7px 10px; background: var(--surface2); border-radius: 6px; margin-bottom: 5px; font-size: 0.78em; color: var(--text3); }
+  .archive-task-text { text-decoration: line-through; flex: 1; }
+
+  /* MODAL */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+  .modal-overlay.active { display: flex; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 26px; width: 520px; max-width: 95vw; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+  .modal-title { font-family: 'Unbounded', sans-serif; font-size: 0.95em; margin-bottom: 22px; color: var(--accent); display: flex; align-items: center; gap: 10px; }
+  .form-group { margin-bottom: 14px; }
+  .form-label { display: block; font-size: 0.72em; color: var(--text2); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .form-input, .form-textarea, .form-select { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 9px 13px; color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 0.83em; transition: border-color 0.15s; outline: none; }
+  .form-input:focus, .form-textarea:focus, .form-select:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(0,212,255,0.08); }
+  .form-textarea { min-height: 70px; resize: vertical; }
+  .form-select option { background: var(--surface2); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 22px; }
+
+  .prio-row { display: flex; gap: 8px; }
+  .prio-opt { flex: 1; padding: 7px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface2); color: var(--text2); font-family: 'JetBrains Mono', monospace; font-size: 0.72em; cursor: pointer; text-align: center; transition: all 0.15s; }
+  .prio-opt:hover { border-color: var(--accent); }
+  .prio-high { border-color: var(--danger) !important; color: var(--danger) !important; background: rgba(239,68,68,0.08) !important; }
+  .prio-medium { border-color: var(--accent3) !important; color: var(--accent3) !important; background: rgba(245,158,11,0.08) !important; }
+  .prio-low { border-color: var(--success) !important; color: var(--success) !important; background: rgba(16,185,129,0.08) !important; }
+
+  /* SETTINGS */
+  .settings-section { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin-bottom: 14px; }
+  .settings-section-title { font-size: 0.72em; color: var(--accent); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px; }
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .toggle-label { font-size: 0.8em; color: var(--text2); }
+  .toggle { width: 38px; height: 21px; background: var(--surface3); border-radius: 11px; position: relative; cursor: pointer; border: 1px solid var(--border); transition: background 0.2s; flex-shrink: 0; }
+  .toggle.on { background: var(--accent); border-color: var(--accent); }
+  .toggle::after { content: ''; position: absolute; width: 15px; height: 15px; background: #fff; border-radius: 50%; top: 2px; left: 2px; transition: left 0.2s; }
+  .toggle.on::after { left: 19px; }
+
+  /* NOTIFICATION */
+  .notif { position: fixed; top: 16px; right: 16px; background: var(--surface); border: 1px solid var(--accent); border-radius: 10px; padding: 14px 18px; max-width: 300px; z-index: 9999; animation: slideIn 0.3s ease; box-shadow: 0 8px 30px rgba(0,212,255,0.15); }
+  .notif.warn { border-color: var(--accent3); box-shadow: 0 8px 30px rgba(245,158,11,0.15); }
+  .notif.err { border-color: var(--danger); box-shadow: 0 8px 30px rgba(239,68,68,0.15); }
+  .notif.ok { border-color: var(--success); box-shadow: 0 8px 30px rgba(16,185,129,0.15); }
+  @keyframes slideIn { from{transform:translateX(100%);opacity:0} to{transform:translateX(0);opacity:1} }
+  .notif-t { font-size: 0.78em; font-weight: 700; color: var(--accent); margin-bottom: 3px; }
+  .notif.warn .notif-t { color: var(--accent3); }
+  .notif.err .notif-t { color: var(--danger); }
+  .notif.ok .notif-t { color: var(--success); }
+  .notif-b { font-size: 0.75em; color: var(--text2); line-height: 1.4; }
+  .notif-x { position: absolute; top: 7px; right: 9px; background: none; border: none; color: var(--text3); cursor: pointer; }
+
+  /* REMINDER POPUP */
+  .rem-popup { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9998; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
+  .rem-popup.active { display: flex; }
+  .rem-content { background: var(--surface); border: 2px solid var(--accent3); border-radius: 18px; padding: 36px; text-align: center; max-width: 400px; box-shadow: 0 0 50px rgba(245,158,11,0.25); animation: popIn 0.3s ease; }
+  @keyframes popIn { from{transform:scale(0.8);opacity:0} to{transform:scale(1);opacity:1} }
+  .rem-icon { font-size: 2.5em; margin-bottom: 12px; }
+  .rem-title { font-family: 'Unbounded', sans-serif; font-size: 1em; color: var(--accent3); margin-bottom: 10px; }
+  .rem-list { text-align: left; margin: 14px 0; max-height: 180px; overflow-y: auto; }
+  .rem-item { padding: 7px 11px; background: var(--surface2); border-radius: 5px; margin-bottom: 5px; font-size: 0.78em; }
+
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo">DevOps<span>.board</span></div>
+  <div class="header-right">
+    <div class="lang-switcher">
+      <button class="lang-btn active" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" onclick="setLang('ru')">RU</button>
+      <button class="lang-btn" onclick="setLang('uk')">UK</button>
+    </div>
+    <div class="tg-status disconnected" id="tgStatus">✈ <span id="tgStatusText">Telegram</span></div>
+    <button class="btn" onclick="openModal('settingsModal')">⚙ <span data-t="settings">Settings</span></button>
+    <button class="btn" onclick="openAddInboxModal()">⚡ <span data-t="incoming">Incoming</span></button>
+    <button class="btn" onclick="openAddColModal()">+ <span data-t="addGroup">Add Group</span></button>
+    <button class="btn" onclick="importFromFile()" title="Import JSON">⬆ <span data-t="import">Import</span></button>
+    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+  </div>
+</div>
+
+<!-- STATS BAR -->
+<div class="stats-bar">
+  <div class="stat-item"><div class="stat-dot" style="background:#3b82f6"></div><span id="sTasks">0</span> <span data-t="tasks">tasks</span></div>
+  <div class="stat-item"><div class="stat-dot" style="background:#10b981"></div><span id="sDone">0</span> <span data-t="done">done</span></div>
+  <div class="stat-item"><div class="stat-dot" style="background:#6b7280"></div><span id="sArchive">0</span> <span data-t="archived">archived</span></div>
+  <div class="stat-item">⏱ <span id="sTimers">0</span> <span data-t="activeTimers">active timers</span></div>
+  <div class="stat-item">⚡ <span id="sInbox">0</span> <span data-t="incoming">incoming</span></div>
+</div>
+
+<!-- INBOX -->
+<div class="inbox-section">
+  <div class="inbox-header">
+    <div class="inbox-title">⚡ <span data-t="incomingTasks">Incoming tasks (one-time)</span> <span class="inbox-badge" id="inboxBadge">0</span></div>
+    <button class="btn btn-sm" onclick="openAddInboxModal()">+</button>
+  </div>
+  <div class="inbox-tasks" id="inboxList"></div>
+</div>
+
+<!-- BOARD -->
+<div class="board-wrapper">
+  <div class="board" id="board">
+    <div class="add-col-btn" id="addColBtn" onclick="openAddColModal()" title="Add group">+</div>
+  </div>
+</div>
+
+<!-- ARCHIVE -->
+<div class="archive-section">
+  <div class="archive-header" onclick="toggleArchive()">
+    <div class="archive-title">🗄 <span data-t="archive">Archive</span> <span class="inbox-badge" id="archiveBadge" style="background:#6b7280;color:#fff">0</span></div>
+    <span id="archArrow" style="color:var(--text3)">▼</span>
+  </div>
+  <div class="archive-body" id="archiveBody">
+    <div id="archiveList"></div>
+    <button class="btn btn-sm btn-danger" onclick="clearArchive()" style="margin-top:8px">🗑 <span data-t="clearArchive">Clear archive</span></button>
+  </div>
+</div>
+
+<!-- ====== MODALS ====== -->
+
+<!-- TASK MODAL -->
+<div class="modal-overlay" id="taskModal">
+  <div class="modal">
+    <div class="modal-title">📝 <span id="taskModalTitle">Task</span></div>
+    <input type="hidden" id="eTaskId">
+    <div class="form-group">
+      <label class="form-label" data-t="taskTitle">Title *</label>
+      <input type="text" class="form-input" id="tTitle" placeholder="Task description...">
+    </div>
+    <div class="form-group">
+      <label class="form-label" data-t="taskDesc">Description</label>
+      <textarea class="form-textarea" id="tDesc" placeholder="Details..."></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label" data-t="priority">Priority</label>
+      <div class="prio-row">
+        <div class="prio-opt" id="pH" onclick="setPrio('high')">🔴 <span data-t="high">High</span></div>
+        <div class="prio-opt" id="pM" onclick="setPrio('medium')">🟡 <span data-t="medium">Medium</span></div>
+        <div class="prio-opt" id="pL" onclick="setPrio('low')">🟢 <span data-t="low">Low</span></div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label" data-t="subtasks">Subtasks</label>
+      <div id="subtaskList" style="margin-bottom:6px"></div>
+      <div style="display:flex;gap:6px">
+        <input type="text" class="form-input" id="newSubtask" placeholder="Add subtask..." style="flex:1" onkeydown="if(event.key==='Enter'){addSubtask();event.preventDefault()}">
+        <button class="btn btn-sm" onclick="addSubtask()">+</button>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">⏱ <span data-t="timerMin">Timer (min)</span></label>
+        <input type="number" class="form-input" id="tTimer" placeholder="30" min="1">
+      </div>
+      <div class="form-group">
+        <label class="form-label">📅 <span data-t="deadline">Deadline</span></label>
+        <input type="date" class="form-input" id="tDeadline">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">🔔 <span data-t="reminder">Reminder</span></label>
+      <input type="datetime-local" class="form-input" id="tReminder">
+    </div>
+    <div class="form-group">
+      <label class="form-label" data-t="group">Group</label>
+      <select class="form-select" id="tColumn"></select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('taskModal')"><span data-t="cancel">Cancel</span></button>
+      <button class="btn btn-accent" onclick="saveTask()">💾 <span data-t="save">Save</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- INBOX MODAL -->
+<div class="modal-overlay" id="inboxModal">
+  <div class="modal">
+    <div class="modal-title">⚡ <span data-t="incomingTask">Incoming Task</span></div>
+    <div class="form-group">
+      <label class="form-label" data-t="taskTitle">Title *</label>
+      <input type="text" class="form-input" id="iTitle" placeholder="Fix Mac via MDM...">
+    </div>
+    <div class="form-group">
+      <label class="form-label">🔔 <span data-t="reminder">Reminder</span></label>
+      <input type="datetime-local" class="form-input" id="iReminder">
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('inboxModal')"><span data-t="cancel">Cancel</span></button>
+      <button class="btn btn-accent" onclick="saveInbox()">+ <span data-t="add">Add</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- COLUMN MODAL -->
+<div class="modal-overlay" id="colModal">
+  <div class="modal">
+    <div class="modal-title">📁 <span data-t="newGroup">New Group</span></div>
+    <div class="form-group">
+      <label class="form-label" data-t="groupName">Group name *</label>
+      <input type="text" class="form-input" id="colName" placeholder="Month 1...">
+    </div>
+    <div class="form-group">
+      <label class="form-label" data-t="color">Color</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <div class="prio-opt" onclick="setColColor('#3b82f6')" style="border-color:#3b82f6;color:#3b82f6">● Blue</div>
+        <div class="prio-opt" onclick="setColColor('#f59e0b')" style="border-color:#f59e0b;color:#f59e0b">● Orange</div>
+        <div class="prio-opt" onclick="setColColor('#10b981')" style="border-color:#10b981;color:#10b981">● Green</div>
+        <div class="prio-opt" onclick="setColColor('#ef4444')" style="border-color:#ef4444;color:#ef4444">● Red</div>
+        <div class="prio-opt" onclick="setColColor('#8b5cf6')" style="border-color:#8b5cf6;color:#8b5cf6">● Purple</div>
+        <div class="prio-opt" onclick="setColColor('#00d4ff')" style="border-color:#00d4ff;color:#00d4ff">● Cyan</div>
+      </div>
+      <input type="hidden" id="colColor" value="#3b82f6">
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('colModal')"><span data-t="cancel">Cancel</span></button>
+      <button class="btn btn-accent" onclick="saveCol()">+ <span data-t="create">Create</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal">
+    <div class="modal-title">⚙ <span data-t="settings">Settings</span></div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">✈ Telegram</div>
+      <div class="form-group">
+        <label class="form-label">Bot Token</label>
+        <input type="text" class="form-input" id="tgToken" placeholder="1234567890:AABBcc...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Chat ID</label>
+        <input type="text" class="form-input" id="tgChatId" placeholder="-100123456789">
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-label" data-t="enableTg">Enable Telegram notifications</span>
+        <div class="toggle" id="tgToggle" onclick="flipToggle('tgEnabled','tgToggle')"></div>
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-label" data-t="tgDeadlines">Notify about deadlines</span>
+        <div class="toggle on" id="tgDToggle" onclick="flipToggle('tgDeadline','tgDToggle')"></div>
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-label" data-t="tgReminders">Notify about reminders</span>
+        <div class="toggle on" id="tgRToggle" onclick="flipToggle('tgReminder','tgRToggle')"></div>
+      </div>
+      <button class="btn btn-accent" onclick="testTg()" style="width:100%;margin-top:6px">📤 <span data-t="testConnection">Test connection</span></button>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">🔔 <span data-t="notifications">Notifications</span></div>
+      <div class="toggle-row">
+        <span class="toggle-label" data-t="startupReminders">Show reminders on startup</span>
+        <div class="toggle on" id="startToggle" onclick="flipToggle('startupReminder','startToggle')"></div>
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-label" data-t="deadlineWarn">Warn about deadlines (3 days)</span>
+        <div class="toggle on" id="dwToggle" onclick="flipToggle('deadlineWarn','dwToggle')"></div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">💾 <span data-t="data">Data</span></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-sm" onclick="exportData()" style="flex:1">⬇ <span data-t="export">Export JSON</span></button>
+        <button class="btn btn-sm" onclick="importFromFile()" style="flex:1">⬆ <span data-t="import">Import JSON</span></button>
+      </div>
+      <button class="btn btn-sm btn-danger" onclick="resetAll()" style="width:100%;margin-top:8px">⚠ <span data-t="resetAll">Reset all data</span></button>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-accent" onclick="saveSettings()">💾 <span data-t="save">Save</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- REMINDER POPUP -->
+<div class="rem-popup" id="remPopup">
+  <div class="rem-content">
+    <div class="rem-icon">🔔</div>
+    <div class="rem-title" data-t="reminders">Reminders</div>
+    <div style="color:var(--text2);font-size:0.82em;margin-bottom:10px" data-t="remindersDesc">The following tasks require your attention:</div>
+    <div class="rem-list" id="remList"></div>
+    <button class="btn btn-accent" onclick="closeRem()" style="width:100%;margin-top:14px">✓ <span data-t="gotIt">Got it</span></button>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// i18n
+// ============================================================
+const LANGS = {
+  en: {
+    settings:'Settings', incoming:'Incoming', addGroup:'Add Group', import:'Import',
+    tasks:'tasks', done:'done', archived:'archived', activeTimers:'active timers',
+    incomingTasks:'Incoming tasks (one-time)', taskTitle:'Title *', taskDesc:'Description',
+    priority:'Priority', high:'High', medium:'Medium', low:'Low', subtasks:'Subtasks',
+    timerMin:'Timer (min)', deadline:'Deadline', reminder:'Reminder', group:'Group',
+    cancel:'Cancel', save:'Save', incomingTask:'Incoming Task', add:'Add',
+    newGroup:'New Group', groupName:'Group name *', color:'Color', create:'Create',
+    enableTg:'Enable Telegram notifications', tgDeadlines:'Notify about deadlines',
+    tgReminders:'Notify about reminders', testConnection:'Test connection',
+    notifications:'Notifications', startupReminders:'Show reminders on startup',
+    deadlineWarn:'Warn about deadlines (3 days)', data:'Data', export:'Export JSON',
+    resetAll:'Reset all data', reminders:'Reminders',
+    remindersDesc:'The following tasks require your attention:', gotIt:'Got it',
+    archive:'Archive', clearArchive:'Clear archive', addTask:'Add task',
+    editTask:'Edit task', newTask:'New task', noTasks:'No tasks',
+    noIncoming:'No incoming tasks', taskDone:'Task completed!',
+    timerExpired:'Timer expired', reminderFired:'Reminder',
+  },
+  ru: {
+    settings:'Настройки', incoming:'Входящие', addGroup:'Добавить группу', import:'Импорт',
+    tasks:'задач', done:'выполнено', archived:'в архиве', activeTimers:'активных таймеров',
+    incomingTasks:'Входящие задачи (разовые)', taskTitle:'Название *', taskDesc:'Описание',
+    priority:'Приоритет', high:'Высокий', medium:'Средний', low:'Низкий', subtasks:'Подзадачи',
+    timerMin:'Таймер (мин)', deadline:'Дедлайн', reminder:'Напоминание', group:'Группа',
+    cancel:'Отмена', save:'Сохранить', incomingTask:'Входящая задача', add:'Добавить',
+    newGroup:'Новая группа', groupName:'Название группы *', color:'Цвет', create:'Создать',
+    enableTg:'Включить уведомления Telegram', tgDeadlines:'Уведомлять о дедлайнах',
+    tgReminders:'Уведомлять о напоминаниях', testConnection:'Тест подключения',
+    notifications:'Уведомления', startupReminders:'Показывать напоминания при запуске',
+    deadlineWarn:'Предупреждать о дедлайнах (3 дня)', data:'Данные', export:'Экспорт JSON',
+    resetAll:'Сбросить все данные', reminders:'Напоминания',
+    remindersDesc:'Следующие задачи требуют внимания:', gotIt:'Понял, закрыть',
+    archive:'Архив', clearArchive:'Очистить архив', addTask:'Добавить задачу',
+    editTask:'Редактировать задачу', newTask:'Новая задача', noTasks:'Нет задач',
+    noIncoming:'Нет входящих задач', taskDone:'Задача выполнена!',
+    timerExpired:'Таймер истёк', reminderFired:'Напоминание',
+  },
+  uk: {
+    settings:'Налаштування', incoming:'Вхідні', addGroup:'Додати групу', import:'Імпорт',
+    tasks:'задач', done:'виконано', archived:'в архіві', activeTimers:'активних таймерів',
+    incomingTasks:'Вхідні задачі (разові)', taskTitle:'Назва *', taskDesc:'Опис',
+    priority:'Пріоритет', high:'Високий', medium:'Середній', low:'Низький', subtasks:'Підзадачі',
+    timerMin:'Таймер (хв)', deadline:'Дедлайн', reminder:'Нагадування', group:'Група',
+    cancel:'Скасувати', save:'Зберегти', incomingTask:'Вхідна задача', add:'Додати',
+    newGroup:'Нова група', groupName:'Назва групи *', color:'Колір', create:'Створити',
+    enableTg:'Увімкнути Telegram сповіщення', tgDeadlines:'Сповіщати про дедлайни',
+    tgReminders:'Сповіщати про нагадування', testConnection:'Тест підключення',
+    notifications:'Сповіщення', startupReminders:'Показувати нагадування при запуску',
+    deadlineWarn:'Попереджати про дедлайни (3 дні)', data:'Дані', export:'Експорт JSON',
+    resetAll:'Скинути всі дані', reminders:'Нагадування',
+    remindersDesc:'Наступні задачі потребують уваги:', gotIt:'Зрозумів, закрити',
+    archive:'Архів', clearArchive:'Очистити архів', addTask:'Додати задачу',
+    editTask:'Редагувати задачу', newTask:'Нова задача', noTasks:'Немає задач',
+    noIncoming:'Немає вхідних задач', taskDone:'Задача виконана!',
+    timerExpired:'Таймер завершився', reminderFired:'Нагадування',
+  }
+};
+
+let lang = localStorage.getItem('lang') || 'en';
+
+function t(key) { return (LANGS[lang] && LANGS[lang][key]) || LANGS.en[key] || key; }
+
+function setLang(l) {
+  lang = l;
+  localStorage.setItem('lang', l);
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.textContent.toLowerCase() === l));
+  document.querySelectorAll('[data-t]').forEach(el => { el.textContent = t(el.dataset.t); });
+  render();
+}
+
+// ============================================================
+// STATE
+// ============================================================
+let S = {
+  columns: [],
+  tasks: [],
+  inbox: [],
+  archive: [],
+  settings: {
+    tgEnabled: false, tgToken: '', tgChatId: '',
+    tgDeadline: true, tgReminder: true,
+    startupReminder: true, deadlineWarn: true
+  }
+};
+
+let prio = 'medium';
+let colColor = '#3b82f6';
+let dragId = null;
+let timers = {};
+let tempSubs = [];
+
+// ============================================================
+// INIT
+// ============================================================
+function init() {
+  loadS();
+  document.querySelectorAll('[data-t]').forEach(el => { el.textContent = t(el.dataset.t); });
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.textContent.toLowerCase() === lang));
+  loadSettingsUI();
+  render();
+  startChecks();
+  setTimeout(checkStartup, 800);
+}
+
+function uid() { return Math.random().toString(36).substr(2,9) + Date.now().toString(36); }
+
+function saveS() { localStorage.setItem('devops_board_v2', JSON.stringify(S)); }
+function loadS() {
+  const d = localStorage.getItem('devops_board_v2');
+  if (d) { try { S = JSON.parse(d); } catch(e){} }
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+function render() {
+  renderBoard();
+  renderInbox();
+  renderArchive();
+  updateStats();
+}
+
+function renderBoard() {
+  const board = document.getElementById('board');
+  const addBtn = document.getElementById('addColBtn');
+  board.innerHTML = '';
+
+  S.columns.forEach(col => {
+    const colTasks = S.tasks.filter(t => t.colId === col.id && !t.done);
+    const el = document.createElement('div');
+    el.className = 'column';
+    el.dataset.colId = col.id;
+    el.innerHTML = `
+      <div class="column-header">
+        <div class="column-title-wrap">
+          <div class="column-color" style="background:${col.color}"></div>
+          <div class="column-title" style="color:${col.color}">${col.title}</div>
+          <div class="column-count">${colTasks.length}</div>
+        </div>
+        <div class="column-actions">
+          <button class="col-btn" onclick="openAddTask('${col.id}')" title="${t('addTask')}">+</button>
+          <button class="col-btn" onclick="renameCol('${col.id}')" title="Rename">✏</button>
+          <button class="col-btn del" onclick="delCol('${col.id}')" title="Delete">✕</button>
+        </div>
+      </div>
+      <div class="column-tasks" id="ct-${col.id}"
+        ondragover="ev.preventDefault()" ondrop="onDrop(event,'${col.id}')">
+        ${colTasks.length === 0 ? `<div class="empty-col"><div class="ei">📭</div>${t('noTasks')}</div>` : colTasks.map(renderTaskCard).join('')}
+      </div>
+      <div class="column-footer">
+        <button class="col-add-btn" onclick="openAddTask('${col.id}')">+ ${t('addTask')}</button>
+      </div>
+    `;
+    board.appendChild(el);
+  });
+
+  board.appendChild(addBtn);
+
+  document.querySelectorAll('.task-card').forEach(c => {
+    c.addEventListener('dragstart', e => { dragId = c.dataset.tid; c.classList.add('dragging'); e.dataTransfer.effectAllowed='move'; });
+    c.addEventListener('dragend', () => { c.classList.remove('dragging'); dragId = null; });
+  });
+
+  document.querySelectorAll('.column-tasks').forEach(ct => {
+    ct.addEventListener('dragover', e => { e.preventDefault(); ct.classList.add('drag-target'); });
+    ct.addEventListener('dragleave', () => ct.classList.remove('drag-target'));
+    ct.addEventListener('drop', e => { ct.classList.remove('drag-target'); });
+  });
+}
+
+function renderTaskCard(task) {
+  const running = !!timers[task.id];
+  const dl = task.deadline ? fmtDeadline(task.deadline) : '';
+  const dlSoon = task.deadline && isDue(task.deadline, 3);
+  const subDone = (task.subtasks || []).filter(s => s.done).length;
+  const subTotal = (task.subtasks || []).length;
+  const subPct = subTotal ? Math.round(subDone / subTotal * 100) : 0;
+
+  return `
+    <div class="task-card ${task.done ? 'done-card' : ''}" draggable="true" data-tid="${task.id}">
+      <div class="task-priority p-${task.priority || 'medium'}"></div>
+      <div class="task-header">
+        <div class="task-title">${task.title}</div>
+        <div class="task-actions">
+          <button class="task-btn done-b" onclick="doneTask('${task.id}')" title="${t('done')}">✓</button>
+          <button class="task-btn" onclick="editTask('${task.id}')" title="Edit">✏</button>
+          ${task.timer ? `<button class="task-btn" onclick="toggleTimer('${task.id}')">${running ? '⏸' : '▶'}</button>` : ''}
+          <button class="task-btn del" onclick="delTask('${task.id}')">✕</button>
+        </div>
+      </div>
+      ${task.desc ? `<div class="task-desc">${task.desc}</div>` : ''}
+      ${subTotal > 0 ? `
+        <div class="subtasks">
+          ${(task.subtasks||[]).map((s,i) => `
+            <div class="subtask ${s.done ? 'done-sub' : ''}" onclick="toggleSub('${task.id}',${i})">
+              <div class="sub-check">${s.done ? '✓' : ''}</div>
+              <span>${s.text}</span>
+              <button class="sub-del" onclick="delSub('${task.id}',${i});event.stopPropagation()">✕</button>
+            </div>
+          `).join('')}
+          <div class="subtask-progress"><div class="subtask-progress-fill" style="width:${subPct}%"></div></div>
+        </div>
+      ` : ''}
+      <div class="task-meta">
+        ${task.deadline ? `<div class="task-badge b-deadline ${dlSoon ? 'soon' : ''}">📅 ${dl}</div>` : ''}
+        ${task.timer ? `<div class="task-badge b-timer ${running ? 'running' : ''}">⏱ ${fmtTime(task.timerLeft ?? task.timer * 60)}</div>` : ''}
+        ${task.reminder ? `<div class="task-badge b-remind">🔔 ${fmtRemDate(task.reminder)}</div>` : ''}
+      </div>
+    </div>
+  `;
+}
+
+function renderInbox() {
+  const el = document.getElementById('inboxList');
+  const badge = document.getElementById('inboxBadge');
+  const active = S.inbox.filter(i => !i.done).length;
+  badge.textContent = active;
+  if (S.inbox.length === 0) { el.innerHTML = `<span style="color:var(--text3);font-size:0.78em">${t('noIncoming')}</span>`; return; }
+  el.innerHTML = S.inbox.map(i => `
+    <div class="inbox-task ${i.done ? 'done' : ''}">
+      <div class="inbox-dot" style="${i.done ? 'background:var(--text3)' : ''}"></div>
+      <span class="inbox-task-text" onclick="toggleInbox('${i.id}')">${i.title}</span>
+      ${i.reminder ? `<span style="font-size:0.7em;color:var(--text3)">🔔${fmtRemDate(i.reminder)}</span>` : ''}
+      <button class="inbox-action" onclick="archiveInbox('${i.id}')" title="Archive">→</button>
+      <button class="inbox-action" onclick="delInbox('${i.id}')" title="Delete">✕</button>
+    </div>
+  `).join('');
+}
+
+function renderArchive() {
+  const el = document.getElementById('archiveList');
+  const badge = document.getElementById('archiveBadge');
+  badge.textContent = S.archive.length;
+  if (S.archive.length === 0) { el.innerHTML = `<div style="color:var(--text3);font-size:0.78em;padding:8px">${t('archive')} ${t('noTasks')}</div>`; return; }
+  el.innerHTML = S.archive.map(a => `
+    <div class="archive-task">
+      <span class="archive-task-text">✓ ${a.title} ${a.colTitle ? `<span style="color:var(--text3)">(${a.colTitle})</span>` : ''}</span>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-sm" onclick="restoreArchive('${a.id}')">↩</button>
+        <button class="btn btn-sm btn-danger" onclick="delArchive('${a.id}')">✕</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function updateStats() {
+  document.getElementById('sTasks').textContent = S.tasks.filter(t => !t.done).length;
+  document.getElementById('sDone').textContent = S.tasks.filter(t => t.done).length;
+  document.getElementById('sArchive').textContent = S.archive.length;
+  document.getElementById('sTimers').textContent = Object.keys(timers).length;
+  document.getElementById('sInbox').textContent = S.inbox.filter(i => !i.done).length;
+}
+
+// ============================================================
+// TASK CRUD
+// ============================================================
+function openAddTask(colId) {
+  prio = 'medium'; tempSubs = [];
+  document.getElementById('taskModalTitle').textContent = t('newTask');
+  document.getElementById('eTaskId').value = '';
+  document.getElementById('tTitle').value = '';
+  document.getElementById('tDesc').value = '';
+  document.getElementById('tTimer').value = '';
+  document.getElementById('tDeadline').value = '';
+  document.getElementById('tReminder').value = '';
+  updatePrioUI();
+  renderSubtaskList();
+  fillColSel(colId);
+  openModal('taskModal');
+}
+
+function editTask(id) {
+  const task = S.tasks.find(t => t.id === id);
+  if (!task) return;
+  prio = task.priority || 'medium';
+  tempSubs = [...(task.subtasks || [])];
+  document.getElementById('taskModalTitle').textContent = t('editTask');
+  document.getElementById('eTaskId').value = id;
+  document.getElementById('tTitle').value = task.title;
+  document.getElementById('tDesc').value = task.desc || '';
+  document.getElementById('tTimer').value = task.timer || '';
+  document.getElementById('tDeadline').value = task.deadline || '';
+  document.getElementById('tReminder').value = task.reminder || '';
+  updatePrioUI();
+  renderSubtaskList();
+  fillColSel(task.colId);
+  openModal('taskModal');
+}
+
+function fillColSel(sel) {
+  const el = document.getElementById('tColumn');
+  el.innerHTML = S.columns.map(c => `<option value="${c.id}" ${c.id === sel ? 'selected' : ''}>${c.title}</option>`).join('');
+}
+
+function saveTask() {
+  const title = document.getElementById('tTitle').value.trim();
+  if (!title) { notif(t('taskTitle'), 'warn'); return; }
+  const id = document.getElementById('eTaskId').value;
+  const colId = document.getElementById('tColumn').value;
+  const timer = parseInt(document.getElementById('tTimer').value) || null;
+  const deadline = document.getElementById('tDeadline').value;
+  const reminder = document.getElementById('tReminder').value;
+  const desc = document.getElementById('tDesc').value;
+
+  if (id) {
+    const task = S.tasks.find(t => t.id === id);
+    if (task) {
+      Object.assign(task, { title, desc, priority: prio, timer, timerLeft: timer ? timer*60 : null, deadline, reminder, colId, subtasks: [...tempSubs] });
+    }
+  } else {
+    S.tasks.push({ id: uid(), colId, title, desc, priority: prio, timer, timerLeft: timer ? timer*60 : null, deadline, reminder, done: false, subtasks: [...tempSubs], createdAt: new Date().toISOString() });
+  }
+  saveS(); render(); closeModal('taskModal');
+}
+
+function delTask(id) {
+  if (!confirm('Delete task?')) return;
+  S.tasks = S.tasks.filter(t => t.id !== id);
+  if (timers[id]) { clearInterval(timers[id]); delete timers[id]; }
+  saveS(); render();
+}
+
+function doneTask(id) {
+  const task = S.tasks.find(t => t.id === id);
+  if (!task) return;
+  const col = S.columns.find(c => c.id === task.colId);
+  S.archive.unshift({ ...task, done: true, colTitle: col?.title, archivedAt: new Date().toISOString() });
+  S.tasks = S.tasks.filter(t => t.id !== id);
+  if (timers[id]) { clearInterval(timers[id]); delete timers[id]; }
+  notif(t('taskDone'), 'ok');
+  tgSend(`✅ ${t('taskDone')}: ${task.title}`);
+  saveS(); render();
+}
+
+// ============================================================
+// SUBTASKS
+// ============================================================
+function addSubtask() {
+  const input = document.getElementById('newSubtask');
+  const text = input.value.trim();
+  if (!text) return;
+  tempSubs.push({ text, done: false });
+  input.value = '';
+  renderSubtaskList();
+}
+
+function renderSubtaskList() {
+  const el = document.getElementById('subtaskList');
+  el.innerHTML = tempSubs.map((s, i) => `
+    <div style="display:flex;align-items:center;gap:7px;padding:5px 8px;background:var(--surface2);border-radius:5px;margin-bottom:4px;font-size:0.78em">
+      <div onclick="tempSubs[${i}].done=!tempSubs[${i}].done;renderSubtaskList()" style="width:13px;height:13px;border:1px solid var(--border);border-radius:3px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:${s.done?'var(--success)':''}">
+        ${s.done ? '<span style="color:#000;font-size:0.8em">✓</span>' : ''}
+      </div>
+      <span style="${s.done ? 'text-decoration:line-through;color:var(--text3)' : ''};flex:1">${s.text}</span>
+      <button onclick="tempSubs.splice(${i},1);renderSubtaskList()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:0.85em">✕</button>
+    </div>
+  `).join('');
+}
+
+function toggleSub(taskId, idx) {
+  const task = S.tasks.find(t => t.id === taskId);
+  if (task && task.subtasks && task.subtasks[idx]) {
+    task.subtasks[idx].done = !task.subtasks[idx].done;
+    saveS(); render();
+  }
+}
+
+function delSub(taskId, idx) {
+  const task = S.tasks.find(t => t.id === taskId);
+  if (task && task.subtasks) { task.subtasks.splice(idx, 1); saveS(); render(); }
+}
+
+// ============================================================
+// COLUMNS
+// ============================================================
+function openAddColModal() {
+  document.getElementById('colName').value = '';
+  colColor = '#3b82f6';
+  openModal('colModal');
+}
+
+function saveCol() {
+  const title = document.getElementById('colName').value.trim();
+  if (!title) { notif(t('groupName'), 'warn'); return; }
+  S.columns.push({ id: uid(), title, color: colColor });
+  saveS(); render(); closeModal('colModal');
+}
+
+function setColColor(c) { colColor = c; document.getElementById('colColor').value = c; }
+
+function renameCol(id) {
+  const col = S.columns.find(c => c.id === id);
+  if (!col) return;
+  const name = prompt('Rename group:', col.title);
+  if (name && name.trim()) { col.title = name.trim(); saveS(); render(); }
+}
+
+function delCol(id) {
+  const n = S.tasks.filter(t => t.colId === id).length;
+  if (n > 0 && !confirm(`This group has ${n} tasks. Delete anyway?`)) return;
+  S.columns = S.columns.filter(c => c.id !== id);
+  S.tasks = S.tasks.filter(t => t.colId !== id);
+  saveS(); render();
+}
+
+// ============================================================
+// DRAG & DROP
+// ============================================================
+function onDrop(e, colId) {
+  e.preventDefault();
+  if (!dragId) return;
+  const task = S.tasks.find(t => t.id === dragId);
+  if (task) { task.colId = colId; saveS(); render(); }
+}
+
+// ============================================================
+// PRIORITY
+// ============================================================
+function setPrio(p) { prio = p; updatePrioUI(); }
+function updatePrioUI() {
+  document.getElementById('pH').className = 'prio-opt' + (prio === 'high' ? ' prio-high' : '');
+  document.getElementById('pM').className = 'prio-opt' + (prio === 'medium' ? ' prio-medium' : '');
+  document.getElementById('pL').className = 'prio-opt' + (prio === 'low' ? ' prio-low' : '');
+}
+
+// ============================================================
+// TIMERS
+// ============================================================
+function toggleTimer(id) {
+  if (timers[id]) { clearInterval(timers[id]); delete timers[id]; saveS(); render(); return; }
+  const task = S.tasks.find(t => t.id === id);
+  if (!task || !task.timer) return;
+  if (!task.timerLeft || task.timerLeft <= 0) task.timerLeft = task.timer * 60;
+  timers[id] = setInterval(() => {
+    const t2 = S.tasks.find(t => t.id === id);
+    if (!t2) { clearInterval(timers[id]); delete timers[id]; return; }
+    t2.timerLeft--;
+    if (t2.timerLeft <= 0) {
+      clearInterval(timers[id]); delete timers[id]; t2.timerLeft = 0;
+      notif(`${t('timerExpired')}: ${t2.title}`, 'warn');
+      tgSend(`⏱ ${t('timerExpired')}: ${t2.title}`);
+    }
+    saveS(); render();
+  }, 1000);
+  render();
+}
+
+function fmtTime(s) {
+  if (s === null || s === undefined) return '';
+  const h = Math.floor(s / 3600), m = Math.floor((s%3600)/60), sec = s % 60;
+  return h > 0 ? `${h}h ${m}m` : `${m}m ${String(sec).padStart(2,'0')}s`;
+}
+
+// ============================================================
+// INBOX
+// ============================================================
+function openAddInboxModal() {
+  document.getElementById('iTitle').value = '';
+  document.getElementById('iReminder').value = '';
+  openModal('inboxModal');
+}
+
+function saveInbox() {
+  const title = document.getElementById('iTitle').value.trim();
+  if (!title) { notif(t('taskTitle'), 'warn'); return; }
+  S.inbox.push({ id: uid(), title, reminder: document.getElementById('iReminder').value, done: false, createdAt: new Date().toISOString() });
+  saveS(); render(); closeModal('inboxModal');
+}
+
+function toggleInbox(id) {
+  const i = S.inbox.find(i => i.id === id);
+  if (i) { i.done = !i.done; saveS(); render(); }
+}
+
+function archiveInbox(id) {
+  const i = S.inbox.find(i => i.id === id);
+  if (i) {
+    S.archive.unshift({ ...i, done: true, colTitle: '⚡ '+t('incoming'), archivedAt: new Date().toISOString() });
+    S.inbox = S.inbox.filter(x => x.id !== id);
+    saveS(); render();
+  }
+}
+
+function delInbox(id) { S.inbox = S.inbox.filter(i => i.id !== id); saveS(); render(); }
+
+// ============================================================
+// ARCHIVE
+// ============================================================
+function toggleArchive() {
+  document.getElementById('archiveBody').classList.toggle('open');
+  document.getElementById('archArrow').textContent = document.getElementById('archiveBody').classList.contains('open') ? '▲' : '▼';
+}
+
+function restoreArchive(id) {
+  const a = S.archive.find(x => x.id === id);
+  if (!a) return;
+  const { colTitle, archivedAt, ...task } = a;
+  task.done = false;
+  if (!S.columns.find(c => c.id === task.colId)) task.colId = S.columns[0]?.id || '';
+  S.tasks.push(task);
+  S.archive = S.archive.filter(x => x.id !== id);
+  saveS(); render();
+}
+
+function delArchive(id) { S.archive = S.archive.filter(x => x.id !== id); saveS(); render(); }
+function clearArchive() { if (!confirm('Clear archive?')) return; S.archive = []; saveS(); render(); }
+
+// ============================================================
+// SETTINGS
+// ============================================================
+function flipToggle(key, elId) {
+  const el = document.getElementById(elId);
+  el.classList.toggle('on');
+  S.settings[key] = el.classList.contains('on');
+  updateTgStatus();
+}
+
+function loadSettingsUI() {
+  const s = S.settings;
+  document.getElementById('tgToken').value = s.tgToken || '';
+  document.getElementById('tgChatId').value = s.tgChatId || '';
+  if (s.tgEnabled) document.getElementById('tgToggle').classList.add('on');
+  if (!s.tgDeadline) document.getElementById('tgDToggle').classList.remove('on');
+  if (!s.tgReminder) document.getElementById('tgRToggle').classList.remove('on');
+  if (!s.startupReminder) document.getElementById('startToggle').classList.remove('on');
+  if (!s.deadlineWarn) document.getElementById('dwToggle').classList.remove('on');
+  updateTgStatus();
+}
+
+function saveSettings() {
+  S.settings.tgToken = document.getElementById('tgToken').value.trim();
+  S.settings.tgChatId = document.getElementById('tgChatId').value.trim();
+  saveS(); updateTgStatus();
+  notif(t('save') + ' ✓', 'ok');
+  closeModal('settingsModal');
+}
+
+function updateTgStatus() {
+  const el = document.getElementById('tgStatus');
+  const tx = document.getElementById('tgStatusText');
+  if (S.settings.tgEnabled && S.settings.tgToken) {
+    el.className = 'tg-status connected';
+    tx.textContent = 'Telegram ✓';
+  } else {
+    el.className = 'tg-status disconnected';
+    tx.textContent = 'Telegram';
+  }
+}
+
+async function testTg() {
+  const tok = document.getElementById('tgToken').value.trim();
+  const cid = document.getElementById('tgChatId').value.trim();
+  if (!tok || !cid) { notif('Enter Token and Chat ID', 'warn'); return; }
+  try {
+    const r = await fetch(`https://api.telegram.org/bot${tok}/sendMessage`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ chat_id: cid, text: '✅ DevOps Board connected!' })
+    });
+    const d = await r.json();
+    d.ok ? notif('Telegram connected! ✓', 'ok') : notif('Error: ' + d.description, 'err');
+  } catch(e) { notif('Connection error: ' + e.message, 'err'); }
+}
+
+async function tgSend(msg) {
+  const s = S.settings;
+  if (!s.tgEnabled || !s.tgToken || !s.tgChatId) return;
+  try {
+    await fetch(`https://api.telegram.org/bot${s.tgToken}/sendMessage`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ chat_id: s.tgChatId, text: msg })
+    });
+  } catch(e) {}
+}
+
+// ============================================================
+// DATA
+// ============================================================
+function exportData() {
+  const blob = new Blob([JSON.stringify(S, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `devops_board_${new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+}
+
+function importFromFile() { document.getElementById('importFile').click(); }
+
+function importData(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      S = JSON.parse(ev.target.result);
+      saveS(); render(); loadSettingsUI();
+      notif(t('import') + ' ✓', 'ok');
+    } catch(e) { notif('Import error!', 'err'); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+function resetAll() {
+  if (!confirm(t('resetAll'))) return;
+  localStorage.removeItem('devops_board_v2');
+  location.reload();
+}
+
+// ============================================================
+// REMINDERS
+// ============================================================
+function startChecks() {
+  setInterval(() => {
+    const now = new Date();
+    [...S.tasks, ...S.inbox].forEach(item => {
+      if (item.reminder && !item.done) {
+        const rem = new Date(item.reminder);
+        if (Math.abs(rem - now) < 60000) {
+          notif(`🔔 ${t('reminderFired')}: ${item.title}`, 'warn');
+          tgSend(`🔔 ${t('reminderFired')}: ${item.title}`);
+          item.reminder = '';
+          saveS();
+        }
+      }
+    });
+  }, 30000);
+}
+
+function checkStartup() {
+  if (!S.settings.startupReminder) return;
+  const items = [];
+  S.tasks.filter(x => !x.done && x.reminder).forEach(x => {
+    if (new Date(x.reminder) < new Date()) items.push(x.title);
+  });
+  S.tasks.filter(x => !x.done && x.deadline && isDue(x.deadline, 3)).forEach(x => {
+    items.push(`${t('deadline')}: ${x.title} (${fmtDeadline(x.deadline)})`);
+  });
+  S.inbox.filter(x => !x.done && x.reminder).forEach(x => {
+    if (new Date(x.reminder) < new Date()) items.push(`[${t('incoming')}] ${x.title}`);
+  });
+  if (items.length > 0) {
+    document.getElementById('remList').innerHTML = items.map(i => `<div class="rem-item">⚡ ${i}</div>`).join('');
+    document.getElementById('remPopup').classList.add('active');
+  }
+}
+
+function closeRem() { document.getElementById('remPopup').classList.remove('active'); }
+
+function isDue(dateStr, days) {
+  if (!dateStr) return false;
+  const diff = (new Date(dateStr) - new Date()) / 86400000;
+  return diff >= 0 && diff <= days;
+}
+
+function fmtDeadline(str) {
+  const d = new Date(str), now = new Date();
+  const diff = Math.ceil((d - now) / 86400000);
+  if (diff < 0) return `Overdue ${Math.abs(diff)}d`;
+  if (diff === 0) return 'Today!';
+  if (diff === 1) return 'Tomorrow';
+  return `${d.getDate()}.${d.getMonth()+1}.${d.getFullYear()} (${diff}d)`;
+}
+
+function fmtRemDate(str) {
+  if (!str) return '';
+  const d = new Date(str);
+  return ` ${d.getDate()}.${d.getMonth()+1} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+
+// ============================================================
+// MODAL HELPERS
+// ============================================================
+function openModal(id) { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => { if (e.target === o) o.classList.remove('active'); });
+});
+
+// ============================================================
+// NOTIFICATIONS
+// ============================================================
+function notif(msg, type = 'info') {
+  const el = document.createElement('div');
+  el.className = `notif ${type === 'warn' ? 'warn' : type === 'err' ? 'err' : type === 'ok' ? 'ok' : ''}`;
+  const label = type === 'warn' ? '⚠' : type === 'err' ? '✕' : type === 'ok' ? '✓' : 'ℹ';
+  el.innerHTML = `<button class="notif-x" onclick="this.parentElement.remove()">✕</button><div class="notif-t">${label} ${type === 'ok' ? 'Done' : type === 'warn' ? 'Warning' : type === 'err' ? 'Error' : 'Info'}</div><div class="notif-b">${msg}</div>`;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 4000);
+}
+
+// ============================================================
+// START
+// ============================================================
+init();
+</script>
+</body>
+</html>
