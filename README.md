@@ -6,8 +6,9 @@ A lightweight, offline-first Kanban task manager — single HTML file, zero depe
 ![No Dependencies](https://img.shields.io/badge/dependencies-none-success?style=flat-square)
 ![Languages](https://img.shields.io/badge/languages-EN%20%7C%20RU%20%7C%20UK-blue?style=flat-square)
 ![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)
-![Menu](https://ibb.co/Wp46zgVp)
+
 ---
+      <img width="1280" height="647" alt="photo_2026-05-27_19-52-22" src="https://github.com/user-attachments/assets/4fce0e45-55bc-4d2b-9b0b-b682bcfe7e8b" />
 
 ## Features
 
